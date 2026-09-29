@@ -35,14 +35,6 @@ jobs:
           grep -E "warning:" app-build.log | grep -v "^ld: warning" | sort -u | tee app-warnings.txt || true
           echo "Warning count: $(wc -l < app-warnings.txt)"
 
-      - name: Test via Xcode scheme
-        run: |
-          set -o pipefail
-          xcodebuild -project Upkeep.xcodeproj -scheme Upkeep \
-            -destination 'platform=macOS,arch=arm64' \
-            CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= \
-            test 2>&1 | tail -40
-
       - name: Read-only CLI smoke test against this runner's home
         working-directory: Packages/UpkeepCore
         run: |

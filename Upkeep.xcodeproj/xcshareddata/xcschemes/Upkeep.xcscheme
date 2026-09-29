@@ -29,16 +29,6 @@
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
       <Testables>
-         <TestableReference
-            skipped = "NO">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "UpkeepCoreTests"
-               BuildableName = "UpkeepCoreTests"
-               BlueprintName = "UpkeepCoreTests"
-               ReferencedContainer = "container:Packages/UpkeepCore">
-            </BuildableReference>
-         </TestableReference>
       </Testables>
    </TestAction>
    <LaunchAction

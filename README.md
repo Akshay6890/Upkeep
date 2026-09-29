@@ -213,7 +213,7 @@ cd Packages/UpkeepCore
 swift test
 ```
 
-Or press ⌘U on the **Upkeep** scheme in Xcode, which includes the `UpkeepCoreTests` target.
+In Xcode, open `Packages/UpkeepCore/Package.swift` and press ⌘U to run the same tests.
 
 The suite has **107 tests**. Every test builds its own tree in a unique temporary directory; **no test touches real user folders**, and tools are never executed (a mock runner returns canned output). Coverage includes:
 
