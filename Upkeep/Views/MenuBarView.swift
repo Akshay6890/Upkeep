@@ -6,6 +6,7 @@ import UpkeepCore
 struct MenuBarContent: View {
     @EnvironmentObject private var appState: AppState
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.openSettings) private var openSettings
 
     var body: some View {
         Text("Upkeep")
@@ -24,8 +25,10 @@ struct MenuBarContent: View {
             showMainWindow()
         }
 
-        SettingsLink {
-            Text("Settings…")
+        Button("Settings…") {
+            // Activate first so the Settings window opens in front, not behind other apps.
+            NSApplication.shared.activate()
+            openSettings()
         }
         .keyboardShortcut(",", modifiers: .command)
 

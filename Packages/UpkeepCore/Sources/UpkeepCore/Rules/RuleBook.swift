@@ -44,9 +44,24 @@ public enum RuleBook {
         "com.apple.findmy.fmipcore", "com.apple.icloud.fmfd", "com.apple.photoanalysisd",
         "com.apple.mediaanalysisd", "com.apple.appstoreagent", "com.apple.commerce",
         "com.apple.accountsd", "com.apple.security", "com.apple.trustd", "com.apple.nbagent",
+        "com.apple.cache_delete", "com.apple.keychainsharingmessagingd", "com.apple.sharingd",
+        "PassKit", "Animoji", "askpermissiond",
     ]
 
-    static let protectedCachePrefixes = ["com.apple.icloud", "com.apple.cloud", "com.apple.bird", "com.apple.security"]
+    /// Prefixes for system services tied to iCloud, accounts, sign-in or security.
+    static let protectedCachePrefixes = [
+        "com.apple.icloud", "com.apple.cloud", "com.apple.bird", "com.apple.security",
+        "com.apple.AuthenticationServices", "com.apple.appleaccount", "com.apple.amsaccount",
+        "com.apple.dataaccess", "com.apple.Passwords", "com.apple.keychain",
+    ]
+
+    /// Apple *apps* (not background services) whose caches are ordinary app caches.
+    static let appleAppCaches: Set<String> = [
+        "com.apple.Safari", "com.apple.dt.Xcode", "com.apple.dt.xcodebuild", "com.apple.dt.instruments",
+        "com.apple.Music", "com.apple.TV", "com.apple.podcasts", "com.apple.iWork.Pages",
+        "com.apple.iWork.Numbers", "com.apple.iWork.Keynote", "com.apple.iMovieApp", "com.apple.garageband10",
+        "com.apple.helpd", "com.apple.Preview", "com.apple.QuickTimePlayerX", "com.apple.AppStore",
+    ]
 
     /// Well-known cache folders whose names are not bundle identifiers.
     static let knownVendorCaches: [String: (risk: CleanupRisk, owner: String)] = [
@@ -66,6 +81,8 @@ public enum RuleBook {
         "electron-builder": (.safe, "electron-builder"),
         "ms-playwright": (.review, "Playwright browser downloads (re-downloaded by `playwright install`)"),
         "Cypress": (.review, "the Cypress binary (re-downloaded by `cypress install`)"),
+        "bazelisk": (.safe, "Bazelisk's downloaded Bazel versions"),
+        "bazel": (.review, "Bazel (repository and build caches; the next build will be slower)"),
     ]
 
     static let commonTopLevelDomains: Set<String> = [
@@ -113,6 +130,15 @@ public enum RuleBook {
         }
         guard looksLikeBundleIdentifier(name) else {
             return .protected(reason: "Upkeep couldn't confidently identify the app that owns this folder.")
+        }
+        if name.hasPrefix("com.apple.") && !appleAppCaches.contains(name) {
+            // Background macOS services rebuild these, but they're usually small and
+            // removing them gains little, so they're never pre-selected.
+            return .candidate(
+                risk: .review,
+                reason: "Cache for the macOS service \(name). macOS rebuilds it, but removing it rarely frees much space.",
+                notes: []
+            )
         }
         if context.runningBundleIdentifiers.contains(name) {
             return .candidate(

@@ -39,6 +39,14 @@ struct CategoryView: View {
                     Label("Selection", systemImage: "checklist")
                 }
                 .disabled(appState.isBusy)
+
+                Button {
+                    appState.requestCleanup()
+                } label: {
+                    Label("Clean Selected", systemImage: "trash")
+                }
+                .help("Review and clean everything you've selected, in all categories")
+                .disabled(appState.isBusy || appState.selectedItemIDs.isEmpty)
             }
         }
     }

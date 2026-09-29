@@ -140,6 +140,8 @@ final class AppState: ObservableObject {
 
     func startScan(trigger: ScanTrigger = .manual) {
         guard !isBusy else { return }
+        // Progress is shown on Overview, so a user-started scan brings it into view.
+        if trigger == .manual { navigate(to: .overview) }
         refreshPermissions()
         let previousSelection = selectedItemIDs
         let previousItemIDs = Set(scanResult?.allItems.map(\.id) ?? [])
@@ -159,7 +161,8 @@ final class AppState: ObservableObject {
             // Sample progress ten times a second instead of pushing every update.
             let poller = Task { @MainActor [weak self] in
                 while !Task.isCancelled {
-                    self?.scanProgress = reporter.snapshot()
+                    let snapshot = reporter.snapshot()
+                    if self?.scanProgress != snapshot { self?.scanProgress = snapshot }
                     try? await Task.sleep(nanoseconds: 100_000_000)
                 }
             }
@@ -282,6 +285,7 @@ final class AppState: ObservableObject {
     func performCleanup(_ plan: CleanupPlan) {
         pendingPlan = nil
         guard !plan.isEmpty, !isBusy else { return }
+        navigate(to: .overview)
         refreshStorage()
         storageBeforeCleanup = storage
         phase = .cleaning
@@ -349,7 +353,8 @@ final class AppState: ObservableObject {
         Task { [weak self] in
             let poller = Task { @MainActor [weak self] in
                 while !Task.isCancelled {
-                    self?.largeFilesProgress = reporter.snapshot()
+                    let snapshot = reporter.snapshot()
+                    if self?.largeFilesProgress != snapshot { self?.largeFilesProgress = snapshot }
                     try? await Task.sleep(nanoseconds: 100_000_000)
                 }
             }
@@ -379,6 +384,11 @@ final class AppState: ObservableObject {
         timer.tolerance = 60
         RunLoop.main.add(timer, forMode: .common)
         scheduleTimer = timer
+        // Also check shortly after launch, so an overdue scan doesn't wait 15 minutes.
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(nanoseconds: 10_000_000_000)
+            self?.runScheduledScanIfDue()
+        }
     }
 
     func runScheduledScanIfDue() {

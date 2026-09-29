@@ -13,8 +13,9 @@ struct SettingsView: View {
             NotificationSettingsView()
                 .tabItem { Label("Notifications", systemImage: "bell") }
         }
-        .frame(width: 540)
-        .fixedSize(horizontal: false, vertical: true)
+        // Grouped forms scroll, so they need a definite size; fixedSize would
+        // collapse them to their minimum height.
+        .frame(width: 580, height: 560)
     }
 }
 

@@ -25,7 +25,8 @@ public struct HomebrewScanner: CleanupScanner {
             ])
         }
         context.progress.analyzed(preview.entries.count)
-        guard preview.totalBytes > 0 || !preview.entries.isEmpty else {
+        // Entries without sizes (broken symlinks, empty folders) free nothing worth offering.
+        guard preview.totalBytes > 0 else {
             return CategoryResult(category: category, items: [])
         }
 
