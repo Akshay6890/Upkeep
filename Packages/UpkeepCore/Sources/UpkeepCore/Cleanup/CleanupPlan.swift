@@ -115,6 +115,14 @@ public struct CleanupProgress: Sendable, Equatable {
     public var currentOperation: String?
     public var bytesReclaimed: Int64
 
+    public init(completed: Int, total: Int, currentItemName: String?, currentOperation: String?, bytesReclaimed: Int64) {
+        self.completed = completed
+        self.total = total
+        self.currentItemName = currentItemName
+        self.currentOperation = currentOperation
+        self.bytesReclaimed = bytesReclaimed
+    }
+
     public var fractionComplete: Double { total == 0 ? 1 : Double(completed) / Double(total) }
 }
 
