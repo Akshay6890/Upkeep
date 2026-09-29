@@ -1,15 +1,15 @@
 import AppKit
 import SwiftUI
 
-/// Upkeep's visual language: near-black surfaces, a bright blue accent taken from
-/// the app icon, translucent (vibrancy) backgrounds and rounded type.
+/// Upkeep's visual language: near-black surfaces, the green accent from the app
+/// icon, translucent (vibrancy) backgrounds and rounded type.
 enum Theme {
-    /// Main accent (the `AccentColor` asset: deep blue in light mode, bright blue in dark).
+    /// Main accent (the `AccentColor` asset: deeper green in light mode, icon green in dark).
     static let accent = Color.accentColor
     /// Lighter end of the accent gradient.
-    static let accentHighlight = Color(red: 0.43, green: 0.68, blue: 1.0)
+    static let accentHighlight = Color(red: 0.61, green: 0.87, blue: 0.62)
     /// Darker end of the accent gradient.
-    static let accentDeep = Color(red: 0.16, green: 0.40, blue: 0.96)
+    static let accentDeep = Color(red: 0.27, green: 0.62, blue: 0.33)
 
     static let accentGradient = LinearGradient(
         colors: [accentHighlight, accentDeep],
@@ -64,7 +64,7 @@ extension View {
 
 // MARK: - Button styles
 
-/// Filled blue gradient capsule for primary actions ("Scan Mac", "Clean Selected").
+/// Filled green gradient capsule for primary actions ("Scan Mac", "Clean Selected").
 struct ProminentButtonStyle: ButtonStyle {
     var large = false
 
@@ -156,7 +156,7 @@ struct VisualEffectBackground: NSViewRepresentable {
     }
 }
 
-/// Main content backdrop: translucent window material with a soft blue glow.
+/// Main content backdrop: translucent window material with a soft green glow.
 struct ContentBackdrop: View {
     var body: some View {
         ZStack {
