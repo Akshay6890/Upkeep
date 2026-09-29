@@ -23,18 +23,7 @@ struct UpkeepApp: App {
         .defaultSize(width: 1000, height: 760)
         .commands {
             CommandGroup(replacing: .newItem) {}
-            CommandMenu("Scan") {
-                Button("Scan Mac") { appState.startScan() }
-                    .keyboardShortcut("r", modifiers: .command)
-                    .disabled(appState.isBusy)
-                Button("Stop Scan") { appState.cancelScan() }
-                    .keyboardShortcut(".", modifiers: .command)
-                    .disabled(appState.phase != .scanning)
-                Divider()
-                Button("Clean Selected…") { appState.requestCleanup() }
-                    .keyboardShortcut(.delete, modifiers: [.command, .shift])
-                    .disabled(appState.isBusy || appState.selectedItems.isEmpty)
-            }
+            ScanCommands(appState: appState)
         }
 
         Settings {
@@ -56,8 +45,34 @@ struct UpkeepApp: App {
     private var menuBarBinding: Binding<Bool> {
         Binding(
             get: { settingsStore.settings.showMenuBarItem },
-            set: { settingsStore.settings.showMenuBarItem = $0 }
+            set: { newValue in
+                // SwiftUI may write this back while building scenes; ignore no-op writes
+                // so they don't publish a change and re-trigger scene evaluation.
+                guard settingsStore.settings.showMenuBarItem != newValue else { return }
+                settingsStore.settings.showMenuBarItem = newValue
+            }
         )
+    }
+}
+
+/// The Scan menu observes AppState on its own, so scan progress updates don't
+/// re-evaluate the whole scene graph.
+struct ScanCommands: Commands {
+    @ObservedObject var appState: AppState
+
+    var body: some Commands {
+        CommandMenu("Scan") {
+            Button("Scan Mac") { appState.startScan() }
+                .keyboardShortcut("r", modifiers: .command)
+                .disabled(appState.isBusy)
+            Button("Stop Scan") { appState.cancelScan() }
+                .keyboardShortcut(".", modifiers: .command)
+                .disabled(appState.phase != .scanning)
+            Divider()
+            Button("Clean Selected…") { appState.requestCleanup() }
+                .keyboardShortcut(.delete, modifiers: [.command, .shift])
+                .disabled(appState.isBusy || appState.selectedItemIDs.isEmpty)
+        }
     }
 }
 

@@ -74,9 +74,13 @@ final class AppState: ObservableObject {
         refreshPermissions()
         startScheduler()
         // Views read settings through AppState, so republish settings changes.
-        settingsObserver = settingsStore.objectWillChange.sink { [weak self] _ in
-            self?.objectWillChange.send()
-        }
+        // Only real changes are forwarded (@Published also fires for no-op assignments).
+        settingsObserver = settingsStore.$settings
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
     }
 
     var settings: UpkeepSettings { settingsStore.settings }
@@ -93,14 +97,16 @@ final class AppState: ObservableObject {
 
     func refreshStorage() {
         do {
-            storage = try DiskSpaceService().storageSummary(for: FileManager.default.homeDirectoryForCurrentUser)
+            let summary = try DiskSpaceService().storageSummary(for: FileManager.default.homeDirectoryForCurrentUser)
+            if summary != storage { storage = summary }
         } catch {
             UpkeepLog.app.warning("Couldn't read volume capacity: \(error)")
         }
     }
 
     func refreshPermissions() {
-        fullDiskAccess = PermissionService.fullDiskAccessStatus()
+        let status = PermissionService.fullDiskAccessStatus()
+        if status != fullDiskAccess { fullDiskAccess = status }
     }
 
     // MARK: Scanning
