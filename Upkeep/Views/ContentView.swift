@@ -10,7 +10,6 @@ enum SidebarItem: Hashable {
 struct ContentView: View {
     @EnvironmentObject private var appState: AppState
     @State private var sidebarSelection: SidebarItem? = .overview
-    @State private var path = NavigationPath()
 
     var body: some View {
         NavigationSplitView {
@@ -31,15 +30,10 @@ struct ContentView: View {
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 260)
         } detail: {
-            NavigationStack(path: $path) {
-                detail
-                    .navigationDestination(for: CleanupCategory.self) { category in
-                        CategoryView(category: category)
-                    }
-            }
+            detail
         }
         .onChange(of: sidebarSelection) { _, _ in
-            path = NavigationPath()
+            appState.openCategory = nil
         }
         .sheet(item: $appState.pendingPlan) { plan in
             CleanupConfirmationView(plan: plan)
@@ -55,7 +49,12 @@ struct ContentView: View {
     private var detail: some View {
         switch sidebarSelection ?? .overview {
         case .overview:
-            DashboardView(showIssues: { sidebarSelection = .issues })
+            if let category = appState.openCategory {
+                CategoryView(category: category)
+                    .id(category)
+            } else {
+                DashboardView(showIssues: { sidebarSelection = .issues })
+            }
         case .largeFiles:
             LargeFilesView()
         case .issues:

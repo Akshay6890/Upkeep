@@ -18,15 +18,26 @@ struct CategoryView: View {
                 ContentUnavailableView("Nothing to clean", systemImage: category.symbolName, description: Text("No items in this category."))
             } else {
                 table
+                    .frame(minHeight: 220, maxHeight: .infinity)
                 if let item = detailItem {
                     Divider()
                     ItemDetailView(item: item)
                 }
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .navigationTitle(category.title)
         .searchable(text: $searchText, placement: .toolbar, prompt: "Filter items")
         .toolbar {
+            ToolbarItem(placement: .navigation) {
+                Button {
+                    appState.openCategory = nil
+                } label: {
+                    Label("Back to Overview", systemImage: "chevron.left")
+                }
+                .keyboardShortcut(.cancelAction)
+                .help("Back to Overview (Esc)")
+            }
             ToolbarItemGroup(placement: .primaryAction) {
                 Menu {
                     Button("Select Safe Items") { appState.selectAll(in: category, includeReview: false) }

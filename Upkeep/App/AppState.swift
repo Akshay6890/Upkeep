@@ -53,6 +53,9 @@ final class AppState: ObservableObject {
 
     @Published var errorMessage: String?
 
+    /// The category whose items are being browsed (shown in place of the dashboard).
+    @Published var openCategory: CleanupCategory?
+
     let settingsStore: SettingsStore
     private var scanWorker: Task<ScanResult, Never>?
     private var largeFilesWorker: Task<CategoryResult, Never>?

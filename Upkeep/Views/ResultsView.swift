@@ -205,8 +205,8 @@ struct CategoryCard: View {
                     }
                     Spacer()
                     if !result.items.isEmpty {
-                        NavigationLink(value: category) {
-                            Text("Show \(Formatting.plural(result.items.count, "item"))")
+                        Button("Show \(Formatting.plural(result.items.count, "item"))") {
+                            appState.openCategory = category
                         }
                     }
                 }
