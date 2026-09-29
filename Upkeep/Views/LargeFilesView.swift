@@ -4,8 +4,8 @@ import UpkeepCore
 /// Informational list of large files. There is deliberately no delete action.
 struct LargeFilesView: View {
     @EnvironmentObject private var appState: AppState
-    @State private var sortOrder = [KeyPathComparator(\CleanupItem.size, order: .reverse)]
-    @State private var highlighted: Set<CleanupItem.ID> = []
+    @State private var sort = ItemSort()
+    @State private var highlighted: CleanupItem.ID?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -71,7 +71,7 @@ struct LargeFilesView: View {
                     description: Text("Nothing in your home folder is \(Formatting.bytes(appState.settings.largeFileThresholdBytes)) or larger.")
                 )
             } else {
-                table(result.items.sorted(using: sortOrder))
+                table(result.items)
                 if !result.issues.isEmpty {
                     Divider()
                     Text(result.issues.map(\.message).joined(separator: " "))
@@ -91,35 +91,7 @@ struct LargeFilesView: View {
     }
 
     private func table(_ items: [CleanupItem]) -> some View {
-        Table(items, selection: $highlighted, sortOrder: $sortOrder) {
-            TableColumn("Name", value: \.name) { item in
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(item.name).lineLimit(1).truncationMode(.middle)
-                    PathLabel(url: item.url)
-                }
-            }
-            .width(min: 240, ideal: 420)
-            TableColumn("Size", value: \.size) { item in
-                Text(Formatting.bytes(item.size)).monospacedDigit()
-            }
-            .width(min: 70, ideal: 90)
-            TableColumn("Modified", value: \.modifiedSortDate) { item in
-                Text(DateText.modified(item.modifiedDate))
-            }
-            .width(min: 90, ideal: 110)
-        }
-        .contextMenu(forSelectionType: CleanupItem.ID.self) { ids in
-            let selected = items.filter { ids.contains($0.id) }
-            Button("Reveal in Finder") {
-                for item in selected { FinderService.reveal(item.url) }
-            }
-            Button("Copy Path") {
-                if let first = selected.first { FinderService.copyPath(first.url) }
-            }
-            .disabled(selected.count != 1)
-        } primaryAction: { ids in
-            for item in items where ids.contains(item.id) { FinderService.reveal(item.url) }
-        }
+        ItemList(items: sort.sorted(items), sort: $sort, highlighted: $highlighted, showsSafety: false)
     }
 }
 

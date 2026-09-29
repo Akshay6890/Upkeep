@@ -123,6 +123,21 @@ final class ScannerTests: XCTestCase {
         XCTAssertGreaterThan(sims.first?.size ?? 0, 0)
     }
 
+    func testMissingSimctlIsSkippedQuietlyAndUsesXcodeDeveloperDir() async throws {
+        try fixture.dir("Applications/Xcode.app/Contents/Developer", in: fixture.root)
+        try fixture.fakeTool("xcrun")
+        try fixture.dir("Library/Developer/CoreSimulator/Devices")
+        let seenDeveloperDir = Flag()
+        let runner = EnvironmentRecordingRunner { environment in
+            if environment["DEVELOPER_DIR"]?.hasSuffix("Xcode.app/Contents/Developer") == true { seenDeveloperDir.set() }
+            return ToolOutput(exitCode: 72, standardOutput: "", standardError: "xcrun: error: unable to find utility \"simctl\", not a developer tool or in PATH")
+        }
+        let result = await XcodeScanner().scan(scanContext(fixture, runner: runner))
+        XCTAssertTrue(result.isAvailable)
+        XCTAssertTrue(result.issues.isEmpty, "A missing simctl is not the user's problem")
+        XCTAssertTrue(seenDeveloperDir.value)
+    }
+
     func testHomebrewDetection() throws {
         let locator = ToolLocator(environment: fixture.environment, fileSystem: LocalFileSystem())
         XCTAssertNil(HomebrewService(locator: locator, runner: MockToolRunner()).detect())

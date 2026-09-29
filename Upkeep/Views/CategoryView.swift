@@ -1,13 +1,13 @@
 import SwiftUI
 import UpkeepCore
 
-/// Individual items of one category, with selection, sorting, search and details.
+/// Individual items of one category, with selection, sorting, filtering and details.
 struct CategoryView: View {
     @EnvironmentObject private var appState: AppState
     let category: CleanupCategory
 
-    @State private var sortOrder = [KeyPathComparator(\CleanupItem.size, order: .reverse)]
-    @State private var highlighted: Set<CleanupItem.ID> = []
+    @State private var sort = ItemSort()
+    @State private var highlighted: CleanupItem.ID?
     @State private var searchText = ""
 
     var body: some View {
@@ -15,10 +15,18 @@ struct CategoryView: View {
             header
             Divider()
             if allItems.isEmpty {
-                ContentUnavailableView("Nothing to clean", systemImage: category.symbolName, description: Text("No items in this category."))
+                emptyState
+            } else if visibleItems.isEmpty {
+                ContentUnavailableView.search(text: searchText)
             } else {
-                table
-                    .frame(minHeight: 220, maxHeight: .infinity)
+                ItemList(
+                    items: visibleItems,
+                    sort: $sort,
+                    highlighted: $highlighted,
+                    isSelected: { appState.isSelected($0) },
+                    setSelected: { appState.setSelected($0, $1) },
+                    selectionDisabled: appState.isBusy
+                )
                 if let item = detailItem {
                     Divider()
                     ItemDetailView(item: item)
@@ -27,7 +35,6 @@ struct CategoryView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .navigationTitle(category.title)
-        .searchable(text: $searchText, placement: .toolbar, prompt: "Filter items")
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
                 Menu {
@@ -38,7 +45,8 @@ struct CategoryView: View {
                 } label: {
                     Label("Selection", systemImage: "checklist")
                 }
-                .disabled(appState.isBusy)
+                .disabled(appState.isBusy || allItems.isEmpty)
+                .help("Select or deselect items in this category")
 
                 Button {
                     appState.requestCleanup()
@@ -53,17 +61,21 @@ struct CategoryView: View {
 
     private var allItems: [CleanupItem] { appState.items(in: category) }
 
+    private var issues: [ScanIssue] {
+        appState.scanResult?.result(for: category)?.issues ?? []
+    }
+
     private var visibleItems: [CleanupItem] {
         let query = searchText.trimmingCharacters(in: .whitespaces)
         let filtered = query.isEmpty ? allItems : allItems.filter {
             $0.name.localizedCaseInsensitiveContains(query) || $0.url.path.localizedCaseInsensitiveContains(query)
         }
-        return filtered.sorted(using: sortOrder)
+        return sort.sorted(filtered)
     }
 
     private var detailItem: CleanupItem? {
-        guard highlighted.count == 1, let id = highlighted.first else { return nil }
-        return allItems.first { $0.id == id }
+        guard let highlighted else { return nil }
+        return allItems.first { $0.id == highlighted }
     }
 
     private var header: some View {
@@ -82,83 +94,37 @@ struct CategoryView: View {
                     .font(.callout.weight(.medium))
                     .monospacedDigit()
             }
-            Spacer()
+            Spacer(minLength: 12)
+            if !allItems.isEmpty {
+                FilterField(text: $searchText)
+            }
         }
         .padding(16)
     }
 
+    @ViewBuilder
+    private var emptyState: some View {
+        let denied = issues.contains { $0.kind == .permissionDenied }
+        if denied {
+            ContentUnavailableView {
+                Label("macOS blocked access", systemImage: "lock.shield")
+            } description: {
+                Text(issues.map(\.message).joined(separator: "\n"))
+            } actions: {
+                Button("Open Privacy Settings…") { PermissionService.openFullDiskAccessSettings() }
+                Button("Scan Again") { appState.startScan() }
+            }
+        } else {
+            ContentUnavailableView(
+                "Nothing to clean",
+                systemImage: category.symbolName,
+                description: Text(issues.isEmpty ? "No items in this category." : issues.map(\.message).joined(separator: "\n"))
+            )
+        }
+    }
+
     private var cleanableSize: Int64 {
         allItems.filter(\.isCleanable).reduce(0) { $0 + $1.size }
-    }
-
-    private var table: some View {
-        Table(visibleItems, selection: $highlighted, sortOrder: $sortOrder) {
-            TableColumn("") { item in
-                Toggle(isOn: selectionBinding(for: item)) {
-                    Text("Select \(item.name)")
-                }
-                .toggleStyle(.checkbox)
-                .labelsHidden()
-                .disabled(!item.isCleanable || appState.isBusy)
-                .help(item.isCleanable ? "Include in cleanup" : "Upkeep won't remove this item")
-            }
-            .width(24)
-
-            TableColumn("Name", value: \.name) { item in
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(item.name)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
-                    PathLabel(url: item.url)
-                }
-                .help(item.reason)
-            }
-            .width(min: 220, ideal: 360)
-
-            TableColumn("Size", value: \.size) { item in
-                Text(Formatting.bytes(item.size))
-                    .monospacedDigit()
-            }
-            .width(min: 70, ideal: 90)
-
-            TableColumn("Modified", value: \.modifiedSortDate) { item in
-                Text(DateText.modified(item.modifiedDate))
-            }
-            .width(min: 90, ideal: 110)
-
-            TableColumn("Safety", value: \.risk) { item in
-                RiskBadge(risk: item.risk, compact: true)
-            }
-            .width(min: 90, ideal: 110)
-        }
-        .contextMenu(forSelectionType: CleanupItem.ID.self) { ids in
-            let items = allItems.filter { ids.contains($0.id) }
-            Button("Reveal in Finder") {
-                for item in items { FinderService.reveal(item.url) }
-            }
-            Button("Copy Path") {
-                FinderService.copyPath(items.first?.url ?? URL(fileURLWithPath: "/"))
-            }
-            .disabled(items.count != 1)
-            Divider()
-            Button("Include in Cleanup") {
-                for item in items { appState.setSelected(item, true) }
-            }
-            .disabled(!items.contains(where: \.isCleanable) || appState.isBusy)
-            Button("Exclude from Cleanup") {
-                for item in items { appState.setSelected(item, false) }
-            }
-            .disabled(appState.isBusy)
-        } primaryAction: { ids in
-            for item in allItems where ids.contains(item.id) { FinderService.reveal(item.url) }
-        }
-    }
-
-    private func selectionBinding(for item: CleanupItem) -> Binding<Bool> {
-        Binding(
-            get: { appState.isSelected(item) },
-            set: { appState.setSelected(item, $0) }
-        )
     }
 }
 

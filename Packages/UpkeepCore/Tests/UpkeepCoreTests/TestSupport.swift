@@ -135,6 +135,15 @@ final class MockToolRunner: ToolRunning, @unchecked Sendable {
     }
 }
 
+/// Returns output based on the environment a tool was launched with.
+final class EnvironmentRecordingRunner: ToolRunning, @unchecked Sendable {
+    let handler: ([String: String]) -> ToolOutput
+    init(handler: @escaping ([String: String]) -> ToolOutput) { self.handler = handler }
+    func run(_ executable: URL, arguments: [String], environment: [String: String], timeout: TimeInterval) async throws -> ToolOutput {
+        handler(environment)
+    }
+}
+
 /// Wraps the real file system and injects faults for specific paths.
 final class FaultInjectingFileSystem: FileSystemService, @unchecked Sendable {
     let base = LocalFileSystem()

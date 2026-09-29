@@ -53,16 +53,37 @@ public struct SimulatorService: Sendable {
         return hasXcode && fs.exists(locator.environment.simulatorDevices) && locator.locate(.xcrun) != nil
     }
 
+    /// `xcrun` resolves tools through `xcode-select`, which often points at the Command
+    /// Line Tools (no `simctl`) even when Xcode is installed. Point it at Xcode directly.
+    var xcrunEnvironment: [String: String]? {
+        guard let xcrun = locator.locate(.xcrun) else { return nil }
+        var extra: [String: String] = [:]
+        let fs = locator.fileSystem
+        if let xcode = locator.environment.xcodeApplicationCandidates.first(where: { fs.exists($0) }) {
+            let developer = xcode.appendingPathComponent("Contents/Developer", isDirectory: true)
+            if fs.exists(developer) { extra["DEVELOPER_DIR"] = developer.path }
+        }
+        return locator.toolEnvironment(for: xcrun, extra: extra)
+    }
+
     public func listDevices() async throws -> [(runtime: String, device: SimulatorDevice)] {
-        guard let xcrun = locator.locate(.xcrun) else { throw ToolError.notInstalled("xcrun") }
+        guard let xcrun = locator.locate(.xcrun), let environment = xcrunEnvironment else {
+            throw ToolError.notInstalled("xcrun")
+        }
         let output = try await runner.run(
             xcrun, arguments: ["simctl", "list", "devices", "--json"],
-            environment: locator.toolEnvironment(for: xcrun), timeout: 60
+            environment: environment, timeout: 60
         )
         guard output.succeeded else {
+            if Self.isMissingSimctl(output) { throw ToolError.notInstalled("simctl") }
             throw ToolError.failed(HomebrewService.failureMessage("simctl list", output))
         }
         return try SimctlParser.parseDevices(Data(output.standardOutput.utf8))
+    }
+
+    static func isMissingSimctl(_ output: ToolOutput) -> Bool {
+        let text = output.standardError + output.standardOutput
+        return text.contains("unable to find utility") || text.contains("not a developer tool")
     }
 
     public func deleteDevice(udid: String) async throws {
@@ -70,7 +91,7 @@ public struct SimulatorService: Sendable {
         guard let xcrun = locator.locate(.xcrun) else { throw ToolError.notInstalled("xcrun") }
         let output = try await runner.run(
             xcrun, arguments: ["simctl", "delete", udid],
-            environment: locator.toolEnvironment(for: xcrun), timeout: 300
+            environment: xcrunEnvironment ?? locator.toolEnvironment(for: xcrun), timeout: 300
         )
         guard output.succeeded else {
             throw ToolError.failed(HomebrewService.failureMessage("simctl delete", output))

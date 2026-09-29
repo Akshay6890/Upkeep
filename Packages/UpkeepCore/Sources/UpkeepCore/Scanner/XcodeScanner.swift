@@ -60,6 +60,10 @@ public struct XcodeScanner: CleanupScanner {
         if simulators.isAvailable() {
             do {
                 items += try await unavailableSimulatorItems(simulators, context: context)
+            } catch ToolError.notInstalled {
+                // simctl isn't available (e.g. only Command Line Tools are selected);
+                // there's nothing to report or fix, so skip simulators quietly.
+                UpkeepLog.scan.info("simctl unavailable; skipping simulator check")
             } catch {
                 issues.issues.append(ScanIssue(
                     category: category, kind: .toolFailed, path: nil,
