@@ -1,7 +1,7 @@
 import Foundation
 
 /// What a cleanup would do, computed before anything is touched.
-public struct CleanupPlan: Sendable, Equatable {
+public struct CleanupPlan: Identifiable, Sendable, Equatable {
     public struct Group: Identifiable, Sendable, Equatable {
         public var id: CleanupCategory { category }
         public let category: CleanupCategory
@@ -34,6 +34,7 @@ public struct CleanupPlan: Sendable, Equatable {
             .sorted { $0.category < $1.category }
     }
 
+    public var id: [String] { items.map(\.id) }
     public var totalBytes: Int64 { items.reduce(0) { $0 + $1.size } }
     public var permanentBytes: Int64 { items.filter(\.isPermanent).reduce(0) { $0 + $1.size } }
     public var reviewItemCount: Int { items.filter { $0.risk == .review }.count }
