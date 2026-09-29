@@ -169,6 +169,18 @@ final class ScannerTests: XCTestCase {
         XCTAssertFalse(runner.recordedArguments.contains(["cleanup"]), "Scanning must never run a real cleanup")
     }
 
+    func testHomebrewWithNothingToFreeShowsNoItem() async throws {
+        try fixture.fakeTool("brew")
+        let runner = MockToolRunner { _, args in
+            if args == ["--cache"] { return ToolOutput(exitCode: 0, standardOutput: "/cache\n", standardError: "") }
+            // Entries without a size (e.g. broken symlinks) free nothing.
+            return ToolOutput(exitCode: 0, standardOutput: "Would remove: /opt/homebrew/lib/broken (symlink)\n", standardError: "")
+        }
+        let result = await HomebrewScanner().scan(scanContext(fixture, runner: runner))
+        XCTAssertTrue(result.isAvailable)
+        XCTAssertTrue(result.items.isEmpty)
+    }
+
     func testHomebrewFailureBecomesIssue() async throws {
         try fixture.fakeTool("brew")
         let runner = MockToolRunner { _, _ in ToolOutput(exitCode: 1, standardOutput: "", standardError: "Error: boom") }

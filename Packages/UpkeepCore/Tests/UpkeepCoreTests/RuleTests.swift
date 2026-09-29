@@ -67,6 +67,29 @@ final class RuleTests: XCTestCase {
         }
     }
 
+    func testAppleServiceCachesNeedReviewButAppleAppCachesAreSafe() throws {
+        let service = try fixture.dir("Library/Caches/com.apple.parsecd")
+        try fixture.file("Library/Caches/com.apple.parsecd/blob")
+        guard case .candidate(.review, _, _) = try verdict(.applicationCache, service, root: caches, kind: .caches) else {
+            return XCTFail("macOS service caches must be Review")
+        }
+        let app = try fixture.dir("Library/Caches/com.apple.Safari")
+        try fixture.file("Library/Caches/com.apple.Safari/blob")
+        guard case .candidate(.safe, _, _) = try verdict(.applicationCache, app, root: caches, kind: .caches) else {
+            return XCTFail("Apple app caches are ordinary app caches")
+        }
+    }
+
+    func testAccountAndSignInCachesAreProtected() throws {
+        for name in ["com.apple.AuthenticationServicesCore.AuthenticationServicesAgent", "com.apple.appleaccountd",
+                     "com.apple.amsaccountsd", "com.apple.dataaccess.dataaccessd", "com.apple.cache_delete", "PassKit"] {
+            let dir = try fixture.dir("Library/Caches/\(name)")
+            guard case .protected = try verdict(.applicationCache, dir, root: caches, kind: .caches) else {
+                return XCTFail("\(name) should be protected")
+            }
+        }
+    }
+
     func testCacheContainingGitRepositoryIsProtected() throws {
         let dir = try fixture.dir("Library/Caches/com.example.App")
         try fixture.dir("Library/Caches/com.example.App/checkout/.git")
