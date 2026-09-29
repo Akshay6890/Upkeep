@@ -29,15 +29,6 @@ struct CategoryView: View {
         .navigationTitle(category.title)
         .searchable(text: $searchText, placement: .toolbar, prompt: "Filter items")
         .toolbar {
-            ToolbarItem(placement: .navigation) {
-                Button {
-                    appState.openCategory = nil
-                } label: {
-                    Label("Back to Overview", systemImage: "chevron.left")
-                }
-                .keyboardShortcut(.cancelAction)
-                .help("Back to Overview (Esc)")
-            }
             ToolbarItemGroup(placement: .primaryAction) {
                 Menu {
                     Button("Select Safe Items") { appState.selectAll(in: category, includeReview: false) }

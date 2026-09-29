@@ -206,7 +206,7 @@ struct CategoryCard: View {
                     Spacer()
                     if !result.items.isEmpty {
                         Button("Show \(Formatting.plural(result.items.count, "item"))") {
-                            appState.openCategory = category
+                            appState.navigate(to: .category(category))
                         }
                     }
                 }

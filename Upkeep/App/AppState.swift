@@ -3,6 +3,13 @@ import Combine
 import SwiftUI
 import UpkeepCore
 
+enum SidebarItem: Hashable {
+    case overview
+    case category(CleanupCategory)
+    case largeFiles
+    case issues
+}
+
 enum CategorySelectionState {
     case none
     case some
@@ -53,8 +60,9 @@ final class AppState: ObservableObject {
 
     @Published var errorMessage: String?
 
-    /// The category whose items are being browsed (shown in place of the dashboard).
-    @Published var openCategory: CleanupCategory?
+    // Navigation: the sidebar selection plus a history for the Back button.
+    @Published private(set) var destination: SidebarItem = .overview
+    private var navigationHistory: [SidebarItem] = []
 
     let settingsStore: SettingsStore
     private var scanWorker: Task<ScanResult, Never>?
@@ -94,6 +102,20 @@ final class AppState: ObservableObject {
             settings: settingsStore.settings,
             runningBundleIdentifiers: RunningApplications.bundleIdentifiers()
         )
+    }
+
+    // MARK: Navigation
+
+    func navigate(to item: SidebarItem) {
+        guard item != destination else { return }
+        navigationHistory.append(destination)
+        if navigationHistory.count > 50 { navigationHistory.removeFirst() }
+        destination = item
+    }
+
+    /// Returns to the previous page, or to Overview when there is no history.
+    func goBack() {
+        destination = navigationHistory.popLast() ?? .overview
     }
 
     // MARK: Storage & permissions
