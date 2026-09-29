@@ -63,7 +63,10 @@ struct ItemList: View {
                     }
                 }
             }
+            // Keep rows inside the list; never draw them over the header or title bar.
+            .clipped()
         }
+        .clipped()
     }
 
     private var showsCheckbox: Bool { isSelected != nil && setSelected != nil }
