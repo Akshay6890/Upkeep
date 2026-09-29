@@ -14,7 +14,7 @@ struct MenuBarContent: View {
 
         Divider()
 
-        Button(appState.phase == .scanning ? "Scanning…" : "Scan Now") {
+        Button(scanTitle) {
             appState.startScan()
             showMainWindow()
         }
@@ -35,6 +35,10 @@ struct MenuBarContent: View {
             NSApplication.shared.terminate(nil)
         }
         .keyboardShortcut("q", modifiers: .command)
+    }
+
+    private var scanTitle: String {
+        appState.phase == .scanning ? "Scanning…" : "Scan Now"
     }
 
     private var reclaimableText: String {

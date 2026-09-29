@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 import UpkeepCore
 
@@ -57,6 +58,7 @@ final class AppState: ObservableObject {
     private var largeFilesWorker: Task<CategoryResult, Never>?
     private var cleanupWorker: Task<CleanupReport, Never>?
     private var scheduleTimer: Timer?
+    private var settingsObserver: AnyCancellable?
 
     private static let lastScanKey = "UpkeepLastScanDate"
     private static let lastReclaimableKey = "UpkeepLastReclaimableBytes"
@@ -71,6 +73,10 @@ final class AppState: ObservableObject {
         refreshStorage()
         refreshPermissions()
         startScheduler()
+        // Views read settings through AppState, so republish settings changes.
+        settingsObserver = settingsStore.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
     }
 
     var settings: UpkeepSettings { settingsStore.settings }

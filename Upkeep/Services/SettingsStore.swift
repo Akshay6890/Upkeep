@@ -11,11 +11,14 @@ struct DeveloperFolder: Codable, Identifiable, Hashable {
     var url: URL { URL(fileURLWithPath: path, isDirectory: true) }
 }
 
+private enum SettingsKeys {
+    static let settings = "UpkeepSettings.v1"
+    static let folders = "UpkeepDeveloperFolders.v1"
+}
+
 /// Persists `UpkeepSettings` and approved folders in UserDefaults.
 @MainActor
 final class SettingsStore: ObservableObject {
-    private static let settingsKey = "UpkeepSettings.v1"
-    private static let foldersKey = "UpkeepDeveloperFolders.v1"
 
     @Published var settings: UpkeepSettings {
         didSet {
@@ -33,7 +36,7 @@ final class SettingsStore: ObservableObject {
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         self.settings = Self.loadSettings(from: defaults)
-        if let data = defaults.data(forKey: Self.foldersKey),
+        if let data = defaults.data(forKey: SettingsKeys.folders),
            let folders = try? JSONDecoder().decode([DeveloperFolder].self, from: data) {
             self.developerFolders = folders
         } else {
@@ -44,7 +47,7 @@ final class SettingsStore: ObservableObject {
 
     /// Reads settings without an instance (used by the app delegate).
     nonisolated static func loadSettings(from defaults: UserDefaults = .standard) -> UpkeepSettings {
-        guard let data = defaults.data(forKey: settingsKey),
+        guard let data = defaults.data(forKey: SettingsKeys.settings),
               let settings = try? JSONDecoder().decode(UpkeepSettings.self, from: data) else {
             return UpkeepSettings()
         }
@@ -53,13 +56,13 @@ final class SettingsStore: ObservableObject {
 
     private func save() {
         if let data = try? JSONEncoder().encode(settings.normalized()) {
-            defaults.set(data, forKey: Self.settingsKey)
+            defaults.set(data, forKey: SettingsKeys.settings)
         }
     }
 
     private func saveFolders() {
         if let data = try? JSONEncoder().encode(developerFolders) {
-            defaults.set(data, forKey: Self.foldersKey)
+            defaults.set(data, forKey: SettingsKeys.folders)
         }
     }
 

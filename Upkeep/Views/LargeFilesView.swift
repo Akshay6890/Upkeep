@@ -36,7 +36,8 @@ struct LargeFilesView: View {
             if appState.isScanningLargeFiles {
                 Button("Stop") { appState.cancelLargeFileScan() }
             } else {
-                Button(appState.largeFiles == nil ? "Find Large Files" : "Scan Again") {
+                let title: String = appState.largeFiles == nil ? "Find Large Files" : "Scan Again"
+                Button(title) {
                     appState.startLargeFileScan()
                 }
                 .buttonStyle(.borderedProminent)
