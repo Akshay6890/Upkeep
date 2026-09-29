@@ -40,7 +40,7 @@ struct LargeFilesView: View {
                 Button(title) {
                     appState.startLargeFileScan()
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(ProminentButtonStyle())
             }
         }
         .padding(16)

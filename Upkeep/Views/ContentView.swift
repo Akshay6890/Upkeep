@@ -16,13 +16,18 @@ struct ContentView: View {
             SidebarView()
                 .frame(width: 230)
                 .frame(maxHeight: .infinity)
-                .background(SidebarBackground())
+                .background(VisualEffectBackground(material: .sidebar))
             Divider()
             detail
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-                .background(Color(nsColor: .windowBackgroundColor))
+                .background(ContentBackdrop())
                 .clipped()
         }
+        // App-wide look: rounded type, and custom buttons (with the hand cursor)
+        // for any button that doesn't choose its own style.
+        .fontDesign(.rounded)
+        .buttonStyle(SecondaryButtonStyle())
+        .tint(Theme.accent)
         .toolbar {
             if appState.destination != .overview {
                 ToolbarItem(placement: .navigation) {
@@ -33,6 +38,7 @@ struct ContentView: View {
                     }
                     .keyboardShortcut("[", modifiers: .command)
                     .help("Back (⌘[)")
+                    .pointingHandCursor()
                 }
             }
         }
@@ -117,8 +123,9 @@ private struct SidebarSectionHeader: View {
     let title: String
 
     var body: some View {
-        Text(title)
-            .font(.caption.weight(.semibold))
+        Text(title.uppercased())
+            .font(.system(size: 10, weight: .bold, design: .rounded))
+            .tracking(0.8)
             .foregroundStyle(.secondary)
             .padding(.horizontal, 8)
             .padding(.top, 14)
@@ -133,6 +140,7 @@ private struct SidebarRow: View {
     let symbol: String
     let item: SidebarItem
     var badge: String?
+    @State private var hovering = false
 
     var body: some View {
         let isSelected = appState.destination == item
@@ -141,45 +149,38 @@ private struct SidebarRow: View {
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: symbol)
-                    .font(.body)
-                    .foregroundStyle(Color.accentColor)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(isSelected ? AnyShapeStyle(Color.white) : AnyShapeStyle(Theme.accent))
                     .frame(width: 20)
                     .accessibilityHidden(true)
                 Text(title)
+                    .font(.system(.body, design: .rounded).weight(isSelected ? .semibold : .regular))
+                    .foregroundStyle(isSelected ? Color.white : Color.primary)
                     .lineLimit(1)
                     .truncationMode(.tail)
                 Spacer(minLength: 6)
                 if let badge {
                     Text(badge)
-                        .font(.caption)
+                        .font(.system(.caption, design: .rounded).weight(.medium))
                         .monospacedDigit()
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(isSelected ? Color.white.opacity(0.85) : Color.secondary)
                         .lineLimit(1)
                 }
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(isSelected ? Color.primary.opacity(0.1) : Color.clear)
+                RoundedRectangle(cornerRadius: 9, style: .continuous)
+                    .fill(isSelected ? AnyShapeStyle(Theme.accentGradient)
+                          : AnyShapeStyle(Color.primary.opacity(hovering ? 0.07 : 0)))
             )
+            .shadow(color: isSelected ? Theme.accentDeep.opacity(0.3) : .clear, radius: 6, y: 2)
             .contentShape(Rectangle())
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PlainPointerButtonStyle())
+        .onHover { hovering = $0 }
+        .animation(.easeOut(duration: 0.12), value: hovering)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
-}
-
-/// The standard translucent macOS sidebar material.
-private struct SidebarBackground: NSViewRepresentable {
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = .sidebar
-        view.blendingMode = .behindWindow
-        view.state = .followsWindowActiveState
-        return view
-    }
-
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {}
 }

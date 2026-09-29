@@ -1,7 +1,7 @@
 import SwiftUI
 import UpkeepCore
 
-/// The rounded, bordered container used throughout the app.
+/// The frosted-glass container used throughout the app.
 struct Card<Content: View>: View {
     var padding: CGFloat = 20
     @ViewBuilder var content: Content
@@ -10,14 +10,7 @@ struct Card<Content: View>: View {
         content
             .padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .fill(Color(nsColor: .controlBackgroundColor))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.09), lineWidth: 1)
-            )
+            .glassSurface()
     }
 }
 
@@ -27,17 +20,24 @@ struct AppIconTile: View {
 
     var body: some View {
         RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
-            .fill(Color("TileBackground"))
+            .fill(
+                LinearGradient(
+                    colors: [Color(white: 0.13), Color(white: 0.05)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+            )
             .overlay(
                 RoundedRectangle(cornerRadius: size * 0.24, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.08), lineWidth: 1)
+                    .strokeBorder(Color.white.opacity(0.12), lineWidth: 1)
             )
             .frame(width: size, height: size)
             .overlay(
                 Image(systemName: "leaf")
-                    .font(.system(size: size * 0.44, weight: .regular))
-                    .foregroundStyle(Color.accentColor)
+                    .font(.system(size: size * 0.44, weight: .medium))
+                    .foregroundStyle(Theme.accentGradient)
             )
+            .shadow(color: Theme.accentDeep.opacity(0.25), radius: 10, y: 4)
             .accessibilityHidden(true)
     }
 }
@@ -49,11 +49,12 @@ struct Pill: View {
 
     var body: some View {
         Text(text)
-            .font(.callout.weight(.medium))
+            .font(.system(.callout, design: .rounded).weight(.semibold))
             .foregroundStyle(tint)
             .padding(.horizontal, 12)
             .padding(.vertical, 5)
             .background(Capsule().fill(tint.opacity(0.14)))
+            .overlay(Capsule().strokeBorder(tint.opacity(0.3), lineWidth: 1))
     }
 }
 
@@ -63,7 +64,7 @@ struct RiskBadge: View {
 
     var body: some View {
         Label(compact ? risk.shortTitle : risk.title, systemImage: risk.symbolName)
-            .font(.caption.weight(.medium))
+            .font(.system(.caption, design: .rounded).weight(.semibold))
             .foregroundStyle(risk.tint)
             .padding(.horizontal, 8)
             .padding(.vertical, 3)
@@ -75,7 +76,7 @@ struct RiskBadge: View {
 extension CleanupRisk {
     var tint: Color {
         switch self {
-        case .safe: return .green
+        case .safe: return Theme.accent
         case .review: return .orange
         case .protected: return .secondary
         }
@@ -95,7 +96,7 @@ struct TriStateCheckbox: View {
                 .foregroundStyle(state == .none ? Color.secondary : Color.accentColor)
                 .contentTransition(.symbolEffect(.replace))
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PlainPointerButtonStyle())
         .accessibilityLabel(label)
         .accessibilityValue(state == .all ? "Selected" : state == .some ? "Partially selected" : "Not selected")
         .accessibilityAddTraits(.isButton)
@@ -116,11 +117,12 @@ struct StatView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(title)
-                .font(.caption)
+            Text(title.uppercased())
+                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .tracking(0.6)
                 .foregroundStyle(.secondary)
             Text(value)
-                .font(.headline)
+                .font(.system(.title3, design: .rounded).weight(.semibold))
                 .monospacedDigit()
         }
         .accessibilityElement(children: .combine)
@@ -137,17 +139,17 @@ struct StorageBar: View {
             ZStack(alignment: .leading) {
                 Capsule().fill(Color.primary.opacity(0.08))
                 Capsule()
-                    .fill(Color.primary.opacity(0.35))
+                    .fill(Color.primary.opacity(0.28))
                     .frame(width: max(0, width * min(1, usedFraction)))
                 if reclaimableFraction > 0 {
                     Capsule()
-                        .fill(Color.accentColor)
+                        .fill(Theme.accentGradient)
                         .frame(width: max(4, width * min(usedFraction, reclaimableFraction)))
                         .offset(x: max(0, width * (min(1, usedFraction) - min(usedFraction, reclaimableFraction))))
                 }
             }
         }
-        .frame(height: 8)
+        .frame(height: 10)
         .accessibilityElement()
         .accessibilityLabel("Disk usage")
         .accessibilityValue("\(Int((usedFraction * 100).rounded())) percent used")

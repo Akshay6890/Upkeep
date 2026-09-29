@@ -27,7 +27,6 @@ struct DashboardView: View {
             .frame(maxWidth: 900)
             .frame(maxWidth: .infinity)
         }
-        .background(Color(nsColor: .windowBackgroundColor))
         .navigationTitle("Upkeep")
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
@@ -67,7 +66,7 @@ struct HeaderCard: View {
                     AppIconTile(size: 56)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Upkeep")
-                            .font(.title2.weight(.semibold))
+                            .font(.system(size: 26, weight: .bold, design: .rounded))
                         Text("Keep your Mac clean, without the guesswork.")
                             .font(.callout)
                             .foregroundStyle(.secondary)

@@ -47,6 +47,7 @@ struct CategoryView: View {
                 }
                 .disabled(appState.isBusy || allItems.isEmpty)
                 .help("Select or deselect items in this category")
+                .pointingHandCursor(!appState.isBusy && !allItems.isEmpty)
 
                 Button {
                     appState.requestCleanup()

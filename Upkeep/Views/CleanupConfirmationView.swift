@@ -72,7 +72,7 @@ struct CleanupConfirmationView: View {
                     appState.performCleanup(plan)
                     dismiss()
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(ProminentButtonStyle())
             }
         }
         .padding(24)
@@ -102,7 +102,7 @@ struct CleanupSummaryView: View {
                     }
                     Spacer()
                     Button("Done") { appState.dismissCleanupSummary() }
-                        .buttonStyle(.borderedProminent)
+                        .buttonStyle(ProminentButtonStyle())
                         .keyboardShortcut(.defaultAction)
                 }
 

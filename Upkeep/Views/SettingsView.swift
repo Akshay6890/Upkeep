@@ -16,6 +16,9 @@ struct SettingsView: View {
         // Grouped forms scroll, so they need a definite size; fixedSize would
         // collapse them to their minimum height.
         .frame(width: 580, height: 560)
+        .fontDesign(.rounded)
+        .buttonStyle(SecondaryButtonStyle())
+        .tint(Theme.accent)
     }
 }
 
@@ -32,31 +35,39 @@ private struct ScanSettingsView: View {
                         Text(frequency.title).tag(frequency)
                     }
                 }
+                .pointingHandCursor()
             } footer: {
                 Text("Automatic scans only run while Upkeep is open (for example, in the menu bar). They never clean anything.")
             }
 
             Section("Include") {
                 Toggle("Logs and crash reports", isOn: $store.settings.includeLogs)
+                    .pointingHandCursor()
                 Toggle("Developer caches (Xcode, Python)", isOn: $store.settings.includeDeveloperCaches)
+                    .pointingHandCursor()
                 Toggle("Package-manager caches (Homebrew, SwiftPM, npm, Yarn, pnpm)", isOn: $store.settings.includePackageManagerCaches)
+                    .pointingHandCursor()
             }
 
             Section {
                 Stepper(value: $store.settings.logMinimumAgeDays, in: UpkeepSettings.ageRange) {
                     LabeledContent("Minimum age for logs", value: days(store.settings.logMinimumAgeDays))
                 }
+                .pointingHandCursor()
                 Stepper(value: $store.settings.crashReportMinimumAgeDays, in: UpkeepSettings.ageRange) {
                     LabeledContent("Minimum age for crash reports", value: days(store.settings.crashReportMinimumAgeDays))
                 }
+                .pointingHandCursor()
                 Stepper(value: $store.settings.temporaryFileMinimumAgeDays, in: UpkeepSettings.ageRange) {
                     LabeledContent("Minimum age for temporary files", value: days(store.settings.temporaryFileMinimumAgeDays))
                 }
+                .pointingHandCursor()
                 Picker("Large file threshold", selection: $store.settings.largeFileThresholdBytes) {
                     ForEach(largeFileThresholds, id: \.self) { value in
                         Text(Formatting.bytes(value)).tag(value)
                     }
                 }
+                .pointingHandCursor()
             } header: {
                 Text("Age and size")
             } footer: {
@@ -78,16 +89,19 @@ private struct CleanupSettingsView: View {
         Form {
             Section {
                 Toggle("Confirm before cleanup", isOn: $store.settings.confirmBeforeCleanup)
+                    .pointingHandCursor()
             } footer: {
                 Text("Upkeep always asks first when the selection includes Review items, permanent Trash deletion or developer-tool commands.")
             }
             Section {
                 Toggle("Move removable files to Trash when possible", isOn: $store.settings.moveToTrashWhenPossible)
+                    .pointingHandCursor()
             } footer: {
                 Text("Moved items can be recovered from the Trash, but their space isn't freed until you empty it. Items already in the Trash and tool-managed caches are always removed directly.")
             }
             Section {
                 Toggle("Show protected items", isOn: $store.settings.showProtectedItems)
+                    .pointingHandCursor()
             } footer: {
                 Text("Lists items Upkeep found but will never clean (for example, caches used by iCloud or folders it can't identify), so you can see why they were left alone.")
             }
@@ -107,7 +121,7 @@ private struct LocationsSettingsView: View {
                 LabeledContent("Full Disk Access") {
                     switch appState.fullDiskAccess {
                     case .granted:
-                        Label("Granted", systemImage: "checkmark.circle.fill").foregroundStyle(.green)
+                        Label("Granted", systemImage: "checkmark.circle.fill").foregroundStyle(Theme.accent)
                     case .denied:
                         Label("Not granted", systemImage: "xmark.circle").foregroundStyle(.orange)
                     case .unknown:
@@ -142,7 +156,7 @@ private struct LocationsSettingsView: View {
                         } label: {
                             Image(systemName: "minus.circle")
                         }
-                        .buttonStyle(.borderless)
+                        .buttonStyle(PlainPointerButtonStyle())
                         .accessibilityLabel("Remove \(folder.url.lastPathComponent)")
                     }
                 }
@@ -183,11 +197,13 @@ private struct NotificationSettingsView: View {
         Form {
             Section {
                 Toggle("Notify after automatic scans", isOn: notifyBinding)
+                    .pointingHandCursor()
                 Picker("Only when at least", selection: $store.settings.notificationThresholdBytes) {
                     ForEach(thresholds, id: \.self) { value in
                         Text(Formatting.bytes(value)).tag(value)
                     }
                 }
+                .pointingHandCursor(store.settings.notifyAfterScheduledScan)
                 .disabled(!store.settings.notifyAfterScheduledScan)
                 if permissionDenied {
                     Text("Notifications are turned off for Upkeep in System Settings › Notifications.")
@@ -199,6 +215,7 @@ private struct NotificationSettingsView: View {
             }
             Section {
                 Toggle("Show Upkeep in the menu bar", isOn: $store.settings.showMenuBarItem)
+                    .pointingHandCursor()
             } footer: {
                 Text("The menu bar item shows your last scan and lets you scan or open Upkeep. With it on, Upkeep keeps running after you close its window.")
             }

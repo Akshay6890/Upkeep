@@ -22,12 +22,12 @@ struct ScanView: View {
     private var idle: some View {
         VStack(spacing: 18) {
             Image(systemName: "sparkles")
-                .font(.system(size: 40, weight: .light))
-                .foregroundStyle(Color.accentColor)
+                .font(.system(size: 44, weight: .light))
+                .foregroundStyle(Theme.accentGradient)
                 .accessibilityHidden(true)
             VStack(spacing: 6) {
                 Text("Find reclaimable storage")
-                    .font(.title3.weight(.semibold))
+                    .font(.system(.title2, design: .rounded).weight(.bold))
                 Text("Upkeep looks for caches, old logs, temporary files, Trash and developer data that can safely be regenerated. Nothing is removed until you review it and confirm.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
@@ -42,8 +42,7 @@ struct ScanView: View {
                     .font(.headline)
                     .frame(minWidth: 160)
             }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.large)
+            .buttonStyle(ProminentButtonStyle(large: true))
             .keyboardShortcut(.defaultAction)
         }
         .frame(maxWidth: .infinity)

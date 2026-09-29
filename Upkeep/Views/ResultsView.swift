@@ -45,7 +45,8 @@ struct SummaryCard: View {
                             .font(.headline)
                             .foregroundStyle(.secondary)
                         Text(Formatting.bytes(result.reclaimableBytes))
-                            .font(.system(size: 40, weight: .semibold, design: .rounded))
+                            .font(.system(size: 44, weight: .bold, design: .rounded))
+                            .foregroundStyle(Theme.accentGradient)
                             .monospacedDigit()
                         Text(breakdown)
                             .font(.callout)
@@ -60,8 +61,7 @@ struct SummaryCard: View {
                             Text(appState.selectedItems.isEmpty ? "Clean Selected" : "Clean Selected (\(Formatting.bytes(appState.selectedBytes)))")
                                 .frame(minWidth: 150)
                         }
-                        .buttonStyle(.borderedProminent)
-                        .controlSize(.large)
+                        .buttonStyle(ProminentButtonStyle(large: true))
                         .disabled(appState.selectedItems.isEmpty || appState.isBusy)
                         Button("Scan Again") { appState.startScan() }
                             .disabled(appState.isBusy)
@@ -165,14 +165,14 @@ struct CategoryCard: View {
                         .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(category.title)
-                            .font(.headline)
+                            .font(.system(.headline, design: .rounded).weight(.bold))
                         Text(subtitle(cleanable))
                             .font(.caption)
                             .foregroundStyle(.secondary)
                     }
                     Spacer()
                     Text(Formatting.bytes(result.cleanableSize))
-                        .font(.title3.weight(.semibold))
+                        .font(.system(.title3, design: .rounded).weight(.bold))
                         .monospacedDigit()
                 }
 

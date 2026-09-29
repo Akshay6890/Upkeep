@@ -10,9 +10,19 @@
     </filter>
     <!-- Very subtle top-to-bottom tone so the tile doesn't look flat at small sizes -->
     <linearGradient id="tile" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#2C2C2E"/>
-      <stop offset="1" stop-color="#1F1F21"/>
+      <stop offset="0" stop-color="#1C1E24"/>
+      <stop offset="1" stop-color="#0B0C0F"/>
     </linearGradient>
+    <!-- Blue leaf, matching the app's accent -->
+    <linearGradient id="leaf" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#6FB0FF"/>
+      <stop offset="1" stop-color="#2F6BFF"/>
+    </linearGradient>
+    <!-- Soft blue glow behind the leaf -->
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#3B7BFF" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#3B7BFF" stop-opacity="0"/>
+    </radialGradient>
   </defs>
 
   <!-- Tile: 824×824 on the 1024 macOS icon grid -->
@@ -21,8 +31,10 @@
     <rect x="101.5" y="101.5" width="821" height="821" rx="184.5" ry="184.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.08" stroke-width="3"/>
   </g>
 
+  <circle cx="530" cy="500" r="330" fill="url(#glow)"/>
+
   <!-- Leaf outline -->
-  <g fill="none" stroke="#7CC47F" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
+  <g fill="none" stroke="url(#leaf)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round">
     <path d="M372 664 C 300 520 402 336 720 300 C 752 470 646 700 372 664 Z"/>
     <!-- Midrib continuing into the stem -->
     <path d="M300 736 C 380 640 470 540 596 432"/>

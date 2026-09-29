@@ -89,7 +89,7 @@ struct ItemList: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 6)
-        .background(Color(nsColor: .controlBackgroundColor))
+        .background(.thinMaterial)
     }
 
     private func sortButton(_ title: String, _ key: ItemSortKey) -> some View {
@@ -106,7 +106,7 @@ struct ItemList: View {
             .font(.caption.weight(sort.key == key ? .semibold : .regular))
             .foregroundStyle(sort.key == key ? Color.primary : Color.secondary)
         }
-        .buttonStyle(.plain)
+        .buttonStyle(PlainPointerButtonStyle())
         .help("Sort by \(title.lowercased())")
         .accessibilityLabel("Sort by \(title)")
     }
@@ -122,6 +122,7 @@ struct ItemList: View {
                 .labelsHidden()
                 .disabled(!item.isCleanable || selectionDisabled)
                 .help(item.isCleanable ? "Include in cleanup" : "Upkeep won't remove this item")
+                .pointingHandCursor(item.isCleanable && !selectionDisabled)
                 .frame(width: 18)
             }
             VStack(alignment: .leading, spacing: 2) {
@@ -150,6 +151,7 @@ struct ItemList: View {
         .padding(.vertical, 7)
         .background(isHighlighted ? Color.accentColor.opacity(0.14) : Color.clear)
         .contentShape(Rectangle())
+        .pointingHandCursor()
         .onTapGesture(count: 2) { FinderService.reveal(item.url) }
         .onTapGesture { highlighted = isHighlighted ? nil : item.id }
         .help(item.reason)
@@ -186,13 +188,14 @@ struct FilterField: View {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.secondary)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(PlainPointerButtonStyle())
                 .accessibilityLabel("Clear filter")
             }
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 5)
-        .background(RoundedRectangle(cornerRadius: 7).fill(Color.primary.opacity(0.06)))
+        .background(Capsule().fill(.thinMaterial))
+        .overlay(Capsule().strokeBorder(Theme.hairline, lineWidth: 1))
         .frame(maxWidth: 260)
     }
 }
